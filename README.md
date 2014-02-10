@@ -1,6 +1,6 @@
 # Module: Navigation Block
 
-Navigation Block is a module for Fork CMS.
+Navigation Block is a module for [Fork CMS](http://www.fork-cms.com).
 This module can be used for adding custom navigation anywhere on your page.
 
 ## Installation
