@@ -13,7 +13,7 @@ Visit the [Fork CMS Documentation](http://www.fork-cms.com/community/documentati
 * You can create your own menus that link to existing pages
 * When adding a menu, you can set the recursion level
 * When adding a menu, you can set a custom class name (for adding extra CSS style)
-* When adding a menu, you can set a custom description (optional)
+* When adding a menu, you can set a custom description (becomes the anchor title)
 * Multilingual support (other languages can have other menu entries)
 
 ## Notes
@@ -27,7 +27,7 @@ You can add a "fixed" footer menu using the parsewidget modifier. You can find t
 
 ## Improvements
 
-* Need to add other languages than Dutch and English
+* Need to add other [languages than Dutch and English] (http://www.fork-cms.com/community/documentation/detail/module-guide/translations-or-locale)
 * Add caching
 
 ## Support
