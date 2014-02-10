@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<locale>
+    <backend>
+        <navigation_block>
+            <item type="label" name="AddNavigationBlock">
+                <translation language="nl"><![CDATA[Navigatie Blok toevoegen]]></translation>
+                <translation language="en"><![CDATA[Add Navigation Block]]></translation>
+            </item>
+            <item type="label" name="Class">
+                <translation language="nl"><![CDATA[klasse]]></translation>
+                <translation language="en"><![CDATA[class]]></translation>
+            </item>
+            <item type="label" name="Identifier">
+                <translation language="nl"><![CDATA[ID]]></translation>
+                <translation language="en"><![CDATA[ID]]></translation>
+            </item>
+            <item type="label" name="Infinite">
+                <translation language="nl"><![CDATA[Oneindig]]></translation>
+                <translation language="en"><![CDATA[Infinite]]></translation>
+            </item>
+            <item type="label" name="NumItems">
+                <translation language="nl"><![CDATA[Aantal items]]></translation>
+                <translation language="en"><![CDATA[Number of items]]></translation>
+            </item>
+            <item type="label" name="RecursionLevel">
+                <translation language="nl"><![CDATA[Recursie niveau]]></translation>
+                <translation language="en"><![CDATA[Recusion level]]></translation>
+            </item>
+            <item type="message" name="NoCategories">
+                <translation language="nl"><![CDATA[Er zijn nog geen categorieen]]></translation>
+                <translation language="en"><![CDATA[No categories]]></translation>
+            </item>
+            <item type="message" name="NeedToCreateCategorieFirst">
+                <translation language="nl"><![CDATA[Je moet eerst een categorie aanmaken]]></translation>
+                <translation language="en"><![CDATA[You need to create a category first]]></translation>
+            </item>
+        </navigation_block>
+        <core>
+            <item type="label" name="NavigationBlock">
+                <translation language="nl"><![CDATA[Navigatie Blok]]></translation>
+                <translation language="en"><![CDATA[Navigation Block]]></translation>
+            </item>
+            <item type="label" name="NavigationBlockCategory">
+                <translation language="nl"><![CDATA[Navigatie Blok categorie]]></translation>
+                <translation language="en"><![CDATA[Navigation Block category]]></translation>
+            </item>
+            <item type="label" name="NavigationBlockDetail">
+                <translation language="nl"><![CDATA[Navigatie Blok detail]]></translation>
+                <translation language="en"><![CDATA[Navigation Block detail]]></translation>
+            </item>
+        </core>
+    </backend>
+</locale>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+	<name>Navigation Block</name>
+	<version>1.0.2</version>
+	<requirements>
+		<minimum_version>3.6.0</minimum_version>
+	</requirements>
+	<description>
+		<![CDATA[Navigation Block is a module for Fork CMS.
+This module can be used for adding custom navigation anywhere on your page.]]>
+	</description>
+	<authors>
+		<author>
+			<name><![CDATA[Bart Lagerweij (Webleads)]]></name>
+			<url><![CDATA[http://www.webleads.nl/]]></url>
+		</author>
+	</authors>
+	<events>
+		<event application="backend" name="after_add"><![CDATA[Triggered when a Menu item is added.]]></event>
+		<event application="backend" name="after_delete"><![CDATA[Triggered when a Menu item is deleted.]]></event>
+		<event application="backend" name="after_edit"><![CDATA[Triggered when a Menu item is edited.]]></event>
+		<event application="backend" name="after_add_category"><![CDATA[Triggered when a Category is added.]]></event>
+		<event application="backend" name="after_delete_category"><![CDATA[Triggered when a Category is deleted.]]></event>
+		<event application="backend" name="after_edit_category"><![CDATA[Triggered when a Category is edited.]]></event>
+	</events>
+</module>
