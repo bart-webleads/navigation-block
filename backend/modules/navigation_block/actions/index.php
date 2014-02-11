@@ -63,7 +63,6 @@ class BackendNavigationBlockIndex extends BackendBaseActionIndex
         BackendNavigationBlockModel::getCategories();
 
         $this->categoryCount = BackendNavigationBlockModel::getCategoryCount();
-        _debug($this->categoryCount);
 	}
 
 	/**
