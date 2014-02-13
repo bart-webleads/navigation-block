@@ -32,7 +32,11 @@ class FrontendNavigationBlockModel
             $info = FrontendNavigation::getPageInfo($item['page_id']);
             $item['title'] = $info['title'];
             $item['navigation_title'] = $info['navigation_title'];
-            $item['full_url'] = $info['full_url'];
+            if (isset($info['tree_type']) && $info['tree_type'] == 'redirect') {
+                $item['full_url'] = $info['redirect_url'];
+            } else {
+                $item['full_url'] = $info['full_url'];
+            }
             if ($item['recursion_level'] !== 0) {
                 $depth = $item['recursion_level'] == -1 ? null : $item['recursion_level'];
                 if (($depth || $depth == null) && FrontendNavigation::getFirstChildId($item['page_id'])) {
