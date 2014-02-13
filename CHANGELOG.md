@@ -3,7 +3,7 @@
 
 Bugfixes:
 
-* Did not handle pages with a redirect Url properly, fixed.
+* Did not handle redirect pages properly, fixed.
 
 1.0.3 (2014-02-11)
 --
