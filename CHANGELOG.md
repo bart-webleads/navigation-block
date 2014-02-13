@@ -13,5 +13,6 @@ Bugfixes:
 * Removed debug
 
 1.0.2 (2014-02-10)
+--
 
 First public release
