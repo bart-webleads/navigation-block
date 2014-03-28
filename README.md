@@ -3,6 +3,10 @@
 Navigation Block is a module for [Fork CMS](http://www.fork-cms.com).
 This module can be used for adding custom navigation anywhere on your page.
 
+## Download
+
+Download latest release from [the release page](https://github.com/bart-lysander/navigation-block/releases).
+
 ## Installation
 
 Visit the [Fork CMS Documentation](http://www.fork-cms.com/community/documentation/detail/getting-started/adding-modules) to learn how to install a module.

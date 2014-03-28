@@ -32,7 +32,7 @@ class FrontendNavigationBlockModel
             $info = FrontendNavigation::getPageInfo($item['page_id']);
             $item['title'] = $info['title'];
             $item['navigation_title'] = $info['navigation_title'];
-            if (isset($info['tree_type']) && $info['tree_type'] == 'redirect') {
+			if (isset($info['tree_type'], $info['redirect_url']) && $info['tree_type'] == 'redirect') {
                 $item['full_url'] = $info['redirect_url'];
             } else {
                 $item['full_url'] = $info['full_url'];
