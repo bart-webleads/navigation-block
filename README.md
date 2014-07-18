@@ -23,6 +23,7 @@ Visit the [Fork CMS Documentation](http://www.fork-cms.com/community/documentati
 ## Notes
 
 You can add a "fixed" footer menu using the parsewidget modifier. You can find the category ID in the category overview (modules > Navigation Block > Category)
+Current version does not work on ForkCMS 3.7
 
 ### Example
     {$var|parsewidget:"navigation_block":"detail":"1"}
