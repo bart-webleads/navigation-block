@@ -5,8 +5,8 @@ This module can be used for adding custom navigation anywhere on your page.
 
 ## Versions
 
-Version 1.x.x will work on ForkCMS 3.6.x
-Version 2.x.x will work on ForkCMS 3.7.x (working on this)
+* Version 1.x.x will work on ForkCMS 3.6.x
+* Version 2.x.x will work on ForkCMS 3.7.x (working on this)
 
 ## Download
 
