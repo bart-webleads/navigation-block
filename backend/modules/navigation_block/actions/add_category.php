@@ -14,59 +14,86 @@
  */
 class BackendNavigationBlockAddCategory extends BackendBaseActionAdd
 {
-	/**
-	 * Execute the action
-	 */
-	public function execute()
-	{
-		parent::execute();
+    /**
+     * Execute the action
+     */
+    public function execute()
+    {
+        parent::execute();
 
-		$this->loadForm();
-		$this->validateForm();
+        $this->loadForm();
+        $this->validateForm();
 
-		$this->parse();
-		$this->display();
-	}
+        $this->parse();
+        $this->display();
+    }
 
-	/**
-	 * Load the form
-	 */
-	private function loadForm()
-	{
-		$this->frm = new BackendForm('addCategory');
-		$this->frm->addText('title', null, null, 'title');
-	}
+    /**
+     * Load the form
+     */
+    private function loadForm()
+    {
+        $this->frm = new BackendForm('addCategory');
+        $this->frm->addText('title');
+        $this->frm->addText('alias');
+    }
 
-	/**
-	 * Validate the form
-	 */
-	private function validateForm()
-	{
-		if($this->frm->isSubmitted())
-		{
-			$this->frm->cleanupFields();
+    /**
+     * Validate the form
+     */
+    private function validateForm()
+    {
+        if ($this->frm->isSubmitted()) {
+            $this->frm->cleanupFields();
+            $this->validateFields();
 
-			// validate fields
-			$this->frm->getField('title')->isFilled(BL::err('TitleIsRequired'));
+            if ($this->frm->isCorrect()) {
+                // build item
+                $item['language'] = BL::getWorkingLanguage();
+                $item['title'] = $this->frm->getField('title')->getValue();
+                $item['alias'] = $this->frm->getField('alias')->getValue();
+                $item['sequence'] = BackendNavigationBlockModel::getMaximumCategorySequence() + 1;
 
-			if($this->frm->isCorrect())
-			{
-				// build item
-				$item['title'] = $this->frm->getField('title')->getValue();
-				$item['language'] = BL::getWorkingLanguage();
-				$item['sequence'] = BackendNavigationBlockModel::getMaximumCategorySequence() + 1;
+                $item = $this->insertData($item);
+                $this->redirectToOverview($item);
+            }
+        }
+    }
 
-				// save the data
-				$item['id'] = BackendNavigationBlockModel::insertCategory($item);
-				BackendModel::triggerEvent($this->getModule(), 'after_add_category', array('item' => $item));
+    /**
+     * @param $item
+     * @return mixed
+     */
+    private function insertData($item)
+    {
+        $item['id'] = BackendNavigationBlockModel::insertCategory($item);
+        BackendModel::triggerEvent($this->getModule(), 'after_add_category', array('item' => $item));
+        return $item;
+    }
 
-				// everything is saved, so redirect to the overview
-				$this->redirect(
-					BackendModel::createURLForAction('categories') .
-					'&report=added-category&var=' . urlencode($item['title']) .
-					'&highlight=row-' . $item['id']
-				);
-			}
-		}
-	}
+    /**
+     * @param $item
+     */
+    private function redirectToOverview($item)
+    {
+        $this->redirect(
+            BackendModel::createURLForAction('categories') .
+            '&report=added-category&var=' . urlencode($item['title']) .
+            '&highlight=row-' . $item['id']
+        );
+    }
+
+    /**
+     *
+     */
+    private function validateFields()
+    {
+        $this->frm->getField('title')->isFilled(BL::err('TitleIsRequired'));
+        if ($this->frm->getField('alias')->isFilled(BL::err('IsRequired'))) {
+            $aliasValue = $this->frm->getField('alias')->getValue();
+            if (ctype_digit($aliasValue)) {
+                $this->frm->getField('alias')->addError(BL::err('AliasCannotBeNumeric'));
+            }
+        }
+    }
 }

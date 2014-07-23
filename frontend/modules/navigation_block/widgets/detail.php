@@ -14,7 +14,16 @@ class FrontendNavigationBlockWidgetDetail extends FrontendBaseWidget
     public function execute()
     {
         parent::execute();
-        $this->loadTemplate();
+
+        $templateFile = null;
+        $otherTemplate = !empty($this->data['extra_label']) ? strtolower($this->data['extra_label']) : null;
+        if ($otherTemplate) {
+            $templateFile = FRONTEND_PATH . '/themes/' . FrontendModel::getModuleSetting('core', 'theme', 'default') . '/modules/navigation_block/layout/widgets/' . $otherTemplate . '.tpl';
+            if (!is_file($templateFile)) {
+                $templateFile = null;
+            }
+        }
+        $this->loadTemplate($templateFile);
         $this->parse();
     }
 
@@ -23,17 +32,23 @@ class FrontendNavigationBlockWidgetDetail extends FrontendBaseWidget
      */
     private function parse()
     {
-        $categoryId = isset($this->data['id']) ? (int)$this->data['id'] : null;
-        if ($categoryId) {
-            $items = FrontendNavigationBlockModel::getPageIdsByCategory($categoryId);
+        $idOrAlias = isset($this->data['id']) ? $this->data['id'] : null;
+        if (is_numeric($idOrAlias)) {
+            $items = FrontendNavigationBlockModel::getPagesByCategoryId($idOrAlias);
+            $category = FrontendNavigationBlockModel::getCategory($idOrAlias);
+        } else {
+            $items = FrontendNavigationBlockModel::getPagesByCategoryAlias($idOrAlias);
+            $category = FrontendNavigationBlockModel::getCategoryAlias($idOrAlias);
+        }
+
+        if (!empty($items)) {
             $pageId = Spoon::get('page')->getId();
             foreach ($items as &$item) {
                 if ($pageId == $item['page_id']) {
                     $item['selected'] = true;
                 }
             }
-            $category = FrontendNavigationBlockModel::getCategory($categoryId);
-		    $this->tpl->assign('widgetNavigationBlockDetail', array(
+            $this->tpl->assign('widgetNavigationBlockDetail', array(
                 'items' => $items,
                 'category' => $category,
             ));

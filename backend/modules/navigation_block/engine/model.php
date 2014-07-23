@@ -30,7 +30,7 @@ class BackendNavigationBlockModel
      *
      */
     const QRY_DATAGRID_BROWSE_CATEGORIES =
-		'SELECT c.id, c.title, COUNT(i.id) AS num_items, c.id as identifier, c.sequence
+		'SELECT c.id, c.title, c.alias, COUNT(i.id) AS num_items, c.sequence
 		 FROM navigation_block_categories AS c
 		 LEFT OUTER JOIN navigation_block AS i ON c.id = i.category_id AND i.language = c.language
 		 WHERE c.language = ?

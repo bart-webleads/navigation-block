@@ -20,7 +20,16 @@
 					{$txtTitle} {$txtTitleError}
 				</div>
 			</div>
-		</div>
+
+            <div class="box">
+                <div class="heading">
+                    <h3><label for="alias">{$lblAlias|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label></h3>
+                </div>
+                <div class="options">
+                    {$txtAlias} {$txtAliasError}
+                </div>
+            </div>
+        </div>
 
 	</div>
 

@@ -3,6 +3,11 @@
 Navigation Block is a module for [Fork CMS](http://www.fork-cms.com).
 This module can be used for adding custom navigation anywhere on your page.
 
+## Versions
+
+Version 1.x.x will work on ForkCMS 3.6.x
+Version 2.x.x will work on ForkCMS 3.7.x (working on this)
+
 ## Download
 
 Download latest release from [the release page](https://github.com/bart-lysander/navigation-block/releases).
@@ -22,13 +27,12 @@ Visit the [Fork CMS Documentation](http://www.fork-cms.com/community/documentati
 
 ## Notes
 
-* You can add a "fixed" footer menu using the parsewidget modifier. You can find the category ID in the category overview (modules > Navigation Block > Category)
-* Current version does not work on ForkCMS 3.7
+You can add a "fixed" footer menu using the parsewidget modifier and the alias parameter.
 
 ### Example
-    {$var|parsewidget:"navigation_block":"detail":"1"}
-    {$var|parsewidget:"navigation_block":"detail":"2"}
-    {$var|parsewidget:"navigation_block":"detail":"3"}
+    {$var|parsewidget:"navigation_block":"detail":"main"}
+    {$var|parsewidget:"navigation_block":"detail":"footleft"}
+    {$var|parsewidget:"navigation_block":"detail":"footright"}
 
 ## Improvements
 
