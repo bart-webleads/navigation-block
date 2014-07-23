@@ -20,5 +20,7 @@ CREATE TABLE IF NOT EXISTS `navigation_block_categories` (
   `extra_id` int(11) NOT NULL,
   `created_on` datetime NOT NULL,
   `edited_on` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  `alias` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `alias` (`alias`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
