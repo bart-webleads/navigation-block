@@ -1,12 +1,19 @@
 <?php
 
+namespace Frontend\Modules\NavigationBlock\Engine;
+
 /**
  * NavigationBlock Model
  *
  * @author Bart Lagerweij <bart@webleads.nl>
  * @copyright Copyright 2014 by Webleads http://www.webleads.nl
  */
-class FrontendNavigationBlockModel
+
+use Frontend\Core\Engine\Model as FrontendModel;
+use Frontend\Core\Engine\Navigation as FrontendNavigation;
+use SpoonDatabase;
+
+class Model
 {
     /**
      * @param $categoryId
@@ -16,7 +23,7 @@ class FrontendNavigationBlockModel
     {
         /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
-        $items = (array)$database->getRecords(
+        $items = (array) $database->getRecords(
             'SELECT nb.page_id, nb.class, nb.description, nb.recursion_level
              FROM navigation_block AS nb
              INNER JOIN pages AS p ON (p.id=nb.page_id AND p.language = nb.language AND p.status = ?)
@@ -41,7 +48,7 @@ class FrontendNavigationBlockModel
     {
         /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
-        $items = (array)$database->getRecords(
+        $items = (array) $database->getRecords(
             'SELECT nb.page_id, nb.class, nb.description, nb.recursion_level
              FROM navigation_block AS nb
              INNER JOIN navigation_block_categories AS nbc ON nbc.id = nb.category_id
@@ -78,7 +85,7 @@ class FrontendNavigationBlockModel
             if ($item['recursion_level'] !== 0) {
                 $depth = $item['recursion_level'] == -1 ? null : $item['recursion_level'];
                 if (($depth || $depth == null) && FrontendNavigation::getFirstChildId($item['page_id'])) {
-                    $childrenHtml = (string) FrontendNavigation::getNavigationHtml('page', $item['page_id'], $depth, array(), '/modules/navigation_block/layout/templates/navigation.tpl');
+                    $childrenHtml = (string) FrontendNavigation::getNavigationHtml('page', $item['page_id'], $depth, array(), '/Modules/NavigationBlock/Layout/Templates/Navigation.tpl');
                     $item['childrenHtml'] = $childrenHtml;
                 }
             }
@@ -95,7 +102,7 @@ class FrontendNavigationBlockModel
     {
         /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
-        $category = (array)$database->getRecord(
+        $category = (array) $database->getRecord(
             'SELECT nbc.*
              FROM navigation_block_categories AS nbc
              WHERE nbc.id = ? AND nbc.language = ?',
@@ -105,7 +112,7 @@ class FrontendNavigationBlockModel
             return array();
         }
 
-        $category['url'] = SpoonFilter::urlise($category['title']);
+        $category['url'] = $category['alias'];
 
         return $category;
     }
@@ -118,7 +125,7 @@ class FrontendNavigationBlockModel
     {
         /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
-        $category = (array)$database->getRecord(
+        $category = (array) $database->getRecord(
             'SELECT nbc.*
              FROM navigation_block_categories AS nbc
              WHERE nbc.alias = ? AND nbc.language = ?',
@@ -128,7 +135,7 @@ class FrontendNavigationBlockModel
             return array();
         }
 
-        $category['url'] = SpoonFilter::urlise($category['title']);
+        $category['url'] = $category['alias'];
 
         return $category;
     }
