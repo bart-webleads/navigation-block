@@ -60,7 +60,7 @@ class Index extends BackendBaseActionIndex
 		$this->dataGrid->enableSequenceByDragAndDrop();
 
 		// check if this action is allowed
-		if(BackendAuthentication::isAllowedAction('edit'))
+		if(BackendAuthentication::isAllowedAction('Edit'))
 		{
 			$this->dataGrid->addColumn(
 				'edit', null, BL::lbl('Edit'),
