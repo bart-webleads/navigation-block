@@ -28,7 +28,7 @@ class Detail extends FrontendBaseWidget
         parent::execute();
 
         $templateFile = null;
-        $categoryAlias = !empty($this->data['extra_label']) ? SpoonFilter::toCamelCase($this->data['extra_label']) : null;
+        $categoryAlias = !empty($this->data['extra_label']) ? SpoonFilter::toCamelCase($this->data['extra_label']) : (!empty($this->data['id']) ?  SpoonFilter::toCamelCase($this->data['id']) : null);
         if ($categoryAlias) {
             $templateFile = $this->getMyTemplate($categoryAlias);
         }
