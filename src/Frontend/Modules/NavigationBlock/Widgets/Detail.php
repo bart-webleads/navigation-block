@@ -73,7 +73,7 @@ class Detail extends FrontendBaseWidget
      */
     private function getMyTemplate($categoryAlias)
     {
-        $currentTheme = FrontendModel::getModuleSetting(
+        $currentTheme = $this->get('fork.settings')->get(
             'Core',
             'theme'
         );
