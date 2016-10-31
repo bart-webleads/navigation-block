@@ -1,0 +1,93 @@
+{% extends '/Layout/Templates/base.html.twig' %}
+
+{% block actionbar %}
+
+{% endblock %}
+
+{% block content %}
+  {% form edit %}
+  <div class="row fork-module-content">
+    <div class="col-md-8">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <p>{{ 'lbl.MainContent'|trans|capitalize }}</p>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="page" class="control-label">
+              {{ 'lbl.Page'|trans|capitalize }}
+            </label>
+            {% form_field_error page_id %} {% form_field page_id %}
+          </div>
+          <div class="form-group">
+            <label for="class" class="control-label">
+              {{ 'lbl.Class'|trans|ucfirst }}
+            </label>
+            {% form_field class %}{% form_field_error class %}
+          </div>
+          <div class="form-group">
+            <label for="class" class="control-label">
+              {{ 'lbl.RecursionLevel'|trans|ucfirst }}
+            </label>
+            {% form_field recursion_level %}{% form_field_error recursion_level %}
+          </div>
+          <div class="form-group">
+            <label for="description" class="control-label">
+              {{ 'lbl.Description'|trans|ucfirst }}
+            </label>
+            {% form_field description %}{% form_field_error description %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <p>{{ 'lbl.Category'|trans|capitalize }}</p>
+        </div>
+        <div class="panel-body">
+          {% form_field category_id %}{% form_field_error category_id %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row fork-module-actions">
+    <div class="col-md-12">
+      <div class="btn-toolbar">
+        <div class="btn-group pull-left" role="group">
+          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#confirmDelete">
+            <span class="fa fa-trash-o"></span>
+            {{ 'lbl.Delete'|trans|capitalize }}
+          </button>
+        </div>
+        <div class="btn-group pull-right" role="group">
+          <button id="addButton" type="submit" name="add" class="btn btn-primary">
+            <span class="fa fa-plus-square"></span>{{ 'lbl.Save'|trans|capitalize }}
+          </button>
+        </div>
+      </div>
+
+      <div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-labelledby="{{ 'lbl.Delete'|trans|capitalize }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <span class="modal-title h4">{{ 'lbl.Delete'|trans|capitalize }}</span>
+            </div>
+            <div class="modal-body">
+              <p>{{ 'msg.ConfirmDelete'|trans|sprintf(item.id) }}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">
+                <span class="fa fa-times"></span>{{ 'lbl.Cancel'|trans|capitalize }}</button>
+              <a href="{{ geturl('delete') }}&amp;id={{ id }}" class="btn btn-danger">
+                <span class="fa fa-trash"></span>{{ 'lbl.Delete'|trans|capitalize }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endform %}
+{% endblock %}

@@ -352,12 +352,10 @@ class Model
 
     public static function getAliasTemplatePath($alias)
     {
-        $currentTheme = BackendModel::getModuleSetting(
-            'Core',
-            'theme'
-        );
-        if ($currentTheme) {
-            $templateFile =  '/src/Frontend/Themes/' . $currentTheme . '/Modules/NavigationBlock/Layout/Widgets/' . SpoonFilter::toCamelCase($alias) . '.tpl';
+        $theme = BackendModel::get('fork.settings')->get('Core', 'theme', 'core');
+
+        if ($theme) {
+            $templateFile =  '/src/Frontend/Themes/' . $theme . '/Modules/NavigationBlock/Layout/Widgets/' . SpoonFilter::toCamelCase($alias) . '.tpl';
             return $templateFile;
         }
         return null;

@@ -10,7 +10,6 @@ namespace Backend\Modules\NavigationBlock\Ajax;
 
 use Backend\Core\Engine\Base\AjaxAction as BackendBaseAJAXAction;
 use SpoonFilter;
-
 use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
 
 class Sequence extends BackendBaseAJAXAction

@@ -1,10 +1,12 @@
-{option:navigation}
+{% if navigation %}
 	<ul>
-		{iteration:navigation}
-			<li{option:navigation.selected} class="selected"{/option:navigation.selected}>
-				<a href="{$navigation.link}" title="{$navigation.navigation_title}"{option:navigation.nofollow} rel="nofollow"{/option:navigation.nofollow}>{$navigation.navigation_title}</a>
-				{$navigation.children}
+		{% for nav in navigation %}
+			<li{% if nav.selected %} class="selected"{% endif %}>
+				<a href="{{ nav.link }}" title="{{ nav.navigation_title }}"{% if nav.nofollow %} rel="nofollow"{% endif %}>
+          {{ nav.navigation_title }}
+        </a>
+				{{ nav.children }}
 			</li>
-		{/iteration:navigation}
+		{% endfor %}
 	</ul>
-{/option:navigation}
+{% endif %}

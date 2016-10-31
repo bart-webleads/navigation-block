@@ -9,7 +9,8 @@ namespace Backend\Modules\NavigationBlock\Ajax;
  */
 
 use Backend\Core\Engine\Base\AjaxAction as BackendBaseAJAXAction;
-use Backend\Modules\NavigationBlock\Engine\Model;
+use SpoonFilter;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
 
 class GeneratePath extends BackendBaseAJAXAction
 {
@@ -25,7 +26,7 @@ class GeneratePath extends BackendBaseAJAXAction
         $alias = \SpoonFilter::getPostValue('alias', null, '', 'string');
 
         if (preg_match('/^[-_a-z0-9]+$/', $alias) ) {
-            $path = Model::getAliasTemplatePath($alias);
+            $path = BackendNavigationBlockModel::getAliasTemplatePath($alias);
         } else {
             $path = '';
         }

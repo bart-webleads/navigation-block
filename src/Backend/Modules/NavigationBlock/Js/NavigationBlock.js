@@ -4,8 +4,8 @@
  * @author    Tijs Verkoyen <tijs@sumocoders.be>
  * @author    Thomas Deceuninck <thomas@fronto.be>
  */
-jsBackend.navigation_block =
-    {
+jsBackend.NavigationBlock =
+{
     generatePath: function () {
         $.ajax(
             {
@@ -25,13 +25,13 @@ jsBackend.navigation_block =
     },
     // init, something like a constructor
     init: function () {
-        jsBackend.navigation_block.generatePath();
+        jsBackend.NavigationBlock.generatePath();
 
         $('#alias').on('keyup', function (e) {
-            jsBackend.navigation_block.generatePath();
+            jsBackend.NavigationBlock.generatePath();
         });
 
     }
 }
 
-$(jsBackend.navigation_block.init);
+$(jsBackend.NavigationBlock.init);
