@@ -9,28 +9,30 @@ namespace Backend\Modules\NavigationBlock\Actions;
  * file that was distributed with this source code.
  */
 
-/**
- * This is the categories-action, it will display the overview of categories
- *
- * @author Bart Lagerweij <bart@webleads.nl>
- */
-
-
 use Backend\Core\Engine\Base\ActionIndex as BackendBaseActionIndex;
-use Backend\Core\Engine\Language as BL;
+use Backend\Core\Language\Language as BL;
 use Backend\Core\Engine\Model as BackendModel;
 use Backend\Core\Engine\Authentication as BackendAuthentication;
-use Backend\Core\Engine\DataGridDB as BackendDataGridDB;
+use Backend\Core\Engine\DataGridDatabase as BackendDataGridDatabase;
 use Backend\Core\Engine\DataGridFunctions as BackendDataGridFunctions;
-
 use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
 
+/**
+ * This is the index-action (default), it will display the overview of Navigation Block posts
+ *
+ * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
+ */
 class Categories extends BackendBaseActionIndex
 {
-	/**
-	 * Execute the action
-	 */
-	public function execute()
+    /**
+     * The dataGrids
+     *
+     * @var array
+     */
+    protected $dataGrid;
+
+	public function execute(): void
 	{
 		parent::execute();
 		$this->loadDataGrid();
@@ -42,16 +44,19 @@ class Categories extends BackendBaseActionIndex
 	/**
 	 * Load the dataGrid
 	 */
-	private function loadDataGrid()
+	private function loadDataGrid(): void
 	{
-		$this->dataGrid = new BackendDataGridDB(
-			BackendNavigationBlockModel::QRY_DATAGRID_BROWSE_CATEGORIES,
-			array(BL::getWorkingLanguage())
+		$this->dataGrid = new BackendDataGridDatabase(
+			BackendNavigationBlockModel::QUERY_DATAGRID_BROWSE_CATEGORIES,
+			[BL::getWorkingLanguage()]
 		);
 
 		// check if this action is allowed
 		if(BackendAuthentication::isAllowedAction('EditCategory'))
 		{
+            $this->dataGrid->setColumnURL(
+                'title', BackendModel::createURLForAction('edit_category') . '&amp;id=[id]'
+            );
 			$this->dataGrid->addColumn(
 				'edit', null, BL::lbl('Edit'),
 				BackendModel::createURLForAction('edit_category') . '&amp;id=[id]',
@@ -67,8 +72,8 @@ class Categories extends BackendBaseActionIndex
 	/**
 	 * Parse & display the page
 	 */
-	protected function parse()
+	protected function parse(): void
 	{
-		$this->tpl->assign('dataGrid', (string) $this->dataGrid->getContent());
+		$this->template->assign('dataGrid', (string) $this->dataGrid->getContent());
 	}
 }

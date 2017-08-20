@@ -9,24 +9,21 @@ namespace Backend\Modules\NavigationBlock\Engine;
  * file that was distributed with this source code.
  */
 
+use Symfony\Component\Finder\Finder;
+use Common\ModuleExtraType;
+use Common\Uri as CommonUri;
+use Backend\Core\Language\Language as BL;
+use Backend\Core\Engine\Model as BackendModel;
+
 /**
  * In this file we store all generic functions that we will be using in the Navigation Block module
  *
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-
-use Backend\Core\Engine\Model as BackendModel;
-use Backend\Core\Engine\Language as BL;
-use SpoonDatabase;
-use SpoonFilter;
-
 class Model
 {
-    /**
-     *
-     */
-
-    const QRY_DATAGRID_BROWSE =
+    const QUERY_DATAGRID_BROWSE =
         'SELECT q.id, p.title as page, c.title as category, UNIX_TIMESTAMP(q.created_on) AS created_on, q.sequence
          FROM navigation_block AS q
          INNER JOIN pages AS p ON (p.id=q.page_id AND p.language = q.language AND p.status = ?)
@@ -34,11 +31,8 @@ class Model
          WHERE q.language = ?
          ORDER BY q.sequence';
 
-    /**
-     *
-     */
-    const QRY_DATAGRID_BROWSE_CATEGORIES =
-		'SELECT c.id, c.title, c.alias, COUNT(i.id) AS num_items, c.sequence
+    const QUERY_DATAGRID_BROWSE_CATEGORIES =
+		'SELECT c.id, c.title, c.template, COUNT(i.id) AS num_items, c.sequence
 		 FROM navigation_block_categories AS c
 		 LEFT OUTER JOIN navigation_block AS i ON c.id = i.category_id AND i.language = c.language
 		 WHERE c.language = ?
@@ -50,33 +44,51 @@ class Model
 	 *
 	 * @param int $id
 	 */
-	public static function delete($id)
+	public static function delete(int $id): void
 	{
-		BackendModel::getContainer()->get('database')->delete('navigation_block', 'id = ?', (int) $id);
+		BackendModel::getContainer()->get('database')->delete('navigation_block', 'id = ?', [$id]);
 	}
+
+    /**
+     * Checks if it is allowed to delete the a category
+     *
+     * @param int $id
+     *
+     * @return bool
+     */
+    public static function deleteCategoryAllowed(int $id): bool
+    {
+        return !(bool) BackendModel::getContainer()->get('database')->getVar(
+            'SELECT 1
+             FROM navigation_block AS i
+             WHERE i.id = ? AND i.language = ?
+             LIMIT 1',
+            [$id, BL::getWorkingLanguage()]
+        );
+    }
 
 	/**
 	 * Delete a specific category
 	 *
 	 * @param int $id
 	 */
-	public static function deleteCategory($id)
+	public static function deleteCategory(int $id): void
 	{
+        $id = (int) $id;
         $db = BackendModel::getContainer()->get('database');
+
+        // get item
         $item = self::getCategory($id);
 
-        // build extra
-        $extra = array('id' => $item['extra_id'],
-            'module' => 'NavigationBlock',
-            'type' => 'widget',
-            'action' => 'detail');
-
-        // delete extra
-        $db->delete('modules_extras', 'id = ? AND module = ? AND type = ? AND action = ?', array($extra['id'], $extra['module'], $extra['type'], $extra['action']));
-
         if (!empty($item)) {
-            $db->delete('navigation_block_categories', 'id = ?', array((int)$id));
-            $db->update('navigation_block', array('category_id' => null), 'category_id = ?', array((int)$id));
+            // delete extra
+            $db->delete('modules_extras', 'id = ?', [$item['extra_id']]);
+
+            // delete category
+            $db->delete('navigation_block_categories', 'id = ?', [$id]);
+
+            // update category for the posts that might be in this category
+            $db->update('navigation_block', array('category_id' => null), 'category_id = ?', [$id]);
         }
     }
 
@@ -86,14 +98,14 @@ class Model
 	 * @param int $id
 	 * @return bool
 	 */
-	public static function exists($id)
+	public static function exists(int $id): bool
 	{
 		return (bool) BackendModel::getContainer()->get('database')->getVar(
 			'SELECT 1
 			 FROM navigation_block AS i
 			 WHERE i.id = ?
 			 LIMIT 1',
-			array((int) $id)
+			[(int) $id]
 		);
 	}
 
@@ -103,14 +115,15 @@ class Model
 	 * @param int $id
 	 * @return bool
 	 */
-	public static function existsCategory($id)
+	public static function existsCategory(int $id): bool
 	{
 		return (bool) BackendModel::getContainer()->get('database')->getVar(
 			'SELECT 1
 			 FROM navigation_block_categories AS i
 			 WHERE i.id = ? AND i.language = ?
 			 LIMIT 1',
-			array((int) $id, BL::getWorkingLanguage()));
+			[(int) $id, BL::getWorkingLanguage()]
+        );
 	}
 
 	/**
@@ -119,13 +132,13 @@ class Model
 	 * @param int $id
 	 * @return array
 	 */
-	public static function get($id)
+	public static function get(int $id): array
 	{
 		return (array) BackendModel::getContainer()->get('database')->getRecord(
 			'SELECT i.*
 			 FROM navigation_block AS i
 			 WHERE i.id = ?',
-			array((int) $id)
+			[(int) $id]
 		);
 	}
 
@@ -135,7 +148,7 @@ class Model
 	 * @param bool[optional] $includeCount
 	 * @return array
 	 */
-	public static function getCategories($includeCount = false)
+	public static function getCategories(bool $includeCount = false): array
 	{
 		$db = BackendModel::getContainer()->get('database');
 
@@ -147,14 +160,16 @@ class Model
 				 LEFT OUTER JOIN navigation_block AS p ON i.id = p.category_id AND i.language = p.language
 				 WHERE i.language = ?
 				 GROUP BY i.id',
-				 array(BL::getWorkingLanguage()));
+				 [BL::getWorkingLanguage()]
+            );
 		}
 
 		return (array) $db->getPairs(
 			'SELECT i.id, i.title
 			 FROM navigation_block_categories AS i
 			 WHERE i.language = ?',
-			 array(BL::getWorkingLanguage()));
+			 [BL::getWorkingLanguage()]
+        );
 	}
 
 	/**
@@ -163,47 +178,81 @@ class Model
 	 * @param int $id
 	 * @return array
 	 */
-	public static function getCategory($id)
+	public static function getCategory(int $id): array
 	{
 		return (array) BackendModel::getContainer()->get('database')->getRecord(
 			'SELECT i.*
 			 FROM navigation_block_categories AS i
 			 WHERE i.id = ? AND i.language = ?',
-			 array((int) $id, BL::getWorkingLanguage()));
+			 [(int) $id, BL::getWorkingLanguage()]
+        );
 	}
+
+    /**
+     * @return int
+     */
+    public static function getCategoryCount(): int
+    {
+        return (int) BackendModel::getContainer()->get('database')->getVar(
+            'SELECT count(*)
+             FROM navigation_block_categories AS i
+             WHERE i.language = ?',
+             [BL::getWorkingLanguage()]
+        );
+    }
 
 	/**
 	 * Get the maximum sequence for a category
 	 *
 	 * @return int
 	 */
-	public static function getMaximumCategorySequence()
+	public static function getMaximumCategorySequence(): int
 	{
 		return (int) BackendModel::getContainer()->get('database')->getVar(
 			'SELECT MAX(i.sequence)
 			 FROM navigation_block_categories AS i
 			 WHERE i.language = ?',
-			 array(BL::getWorkingLanguage()));
+			 [BL::getWorkingLanguage()]
+        );
 	}
 
     /**
-     * @return int
+     * Get templates.
+     *
+     * @return array
      */
-    public static function getCategoryCount()
-	{
-		return (int) BackendModel::getContainer()->get('database')->getVar(
-			'SELECT count(*)
-			 FROM navigation_block_categories AS i
-			 WHERE i.language = ?',
-			 array(BL::getWorkingLanguage()));
-	}
+    public static function getTemplates()
+    {
+        $templates = [];
+        $theme = BackendModel::get('fork.settings')->get('Core', 'theme', 'Fork');
+        $finder = new Finder();
+        $finder->name('*.html.twig');
+        $finder->in(FRONTEND_MODULES_PATH . '/NavigationBlock/Layout/Widgets');
+
+        // if there is a custom theme we should include the templates there also
+        if ($theme !== 'Core') {
+            $path = FRONTEND_PATH . '/Themes/' . $theme . '/Modules/NavigationBlock/Layout/Widgets';
+            if (is_dir($path)) {
+                $finder->in($path);
+            }
+        }
+
+        foreach ($finder->files() as $file) {
+            $templates[] = $file->getBasename();
+        }
+
+        $templates = array_unique($templates);
+
+        return array_combine($templates, $templates);
+    }
+
 
 	/**
 	 * Get the maximum Navigation Block sequence.
 	 *
 	 * @return int
 	 */
-	public static function getMaximumSequence()
+	public static function getMaximumSequence(): int
 	{
 		return (int) BackendModel::getContainer()->get('database')->getVar(
 			'SELECT MAX(i.sequence)
@@ -217,7 +266,7 @@ class Model
 	 * @param array $item
 	 * @return int
 	 */
-	public static function insert(array $item)
+	public static function insert(array $item): int
 	{
 		$item['created_on'] = BackendModel::getUTCDate();
 		$item['edited_on'] = BackendModel::getUTCDate();
@@ -231,55 +280,36 @@ class Model
 	 * @param array $item
 	 * @return int
 	 */
-	public static function insertCategory(array $item)
+	public static function insertCategory(array $item): int
 	{
-		$item['created_on'] = BackendModel::getUTCDate();
-		$item['edited_on'] = BackendModel::getUTCDate();
-
         $db = BackendModel::getContainer()->get('database');
 
-        // build extra
-        $extra = array(
-            'module' => 'NavigationBlock',
-            'type' => 'widget',
-            'label' => 'NavigationBlock',
-            'action' => 'Detail',
-            'data' => null,
-            'hidden' => 'N',
-            'sequence' => $db->getVar(
-                'SELECT MAX(i.sequence) + 1
-                 FROM modules_extras AS i
-                 WHERE i.module = ?',
-                array('navigation_block')
-            )
-        );
-
-        if (is_null($extra['sequence'])) $extra['sequence'] = $db->getVar(
-            'SELECT CEILING(MAX(i.sequence) / 1000) * 1000
-             FROM modules_extras AS i'
-        );
-
         // insert extra
-        $item['extra_id'] = $db->insert('modules_extras', $extra);
-        $extra['id'] = $item['extra_id'];
+        $item['extra_id'] = BackendModel::insertExtra(
+            ModuleExtraType::widget(),
+            'NavigationBlock',
+            'Detail'
+        );
 
         $item['id'] = $db->insert('navigation_block_categories', $item);
 
         // update extra (item id is now known)
-        $extra['data'] = serialize(
-            array(
+        BackendModel::updateExtra(
+            $item['extra_id'],
+            'data',
+            [
                 'id' => $item['id'],
-                'extra_label' => $item['alias'],
-            )
-        );
-        $db->update(
-            'modules_extras',
-            $extra,
-            'id = ? AND module = ? AND type = ? AND action = ?',
-            array($extra['id'], $extra['module'], $extra['type'], $extra['action'])
+                'extra_label' => $item['title'],
+                'language' => $item['language'],
+                'edit_url' => BackendModel::createUrlForAction(
+                    'EditCategory',
+                    'NavigationBlock',
+                    $item['language']
+                ) . '&id=' . $item['id'],
+            ]
         );
 
-        return $item['id'];
+        return (int) $item['id'];
     }
 
 	/**
@@ -287,11 +317,14 @@ class Model
 	 *
 	 * @param array $item
 	 */
-	public static function update(array $item)
+	public static function update(array $item): void
 	{
 		$item['edited_on'] = BackendModel::getUTCDate();
 		BackendModel::getContainer()->get('database')->update(
-			'navigation_block', $item, 'id = ?', (int) $item['id']
+			'navigation_block',
+            $item,
+            'id = ?',
+            [(int) $item['id']]
 		);
 	}
 
@@ -299,40 +332,27 @@ class Model
      * @param array $item
      * @return int
      */
-    public static function updateCategory(array $item)
+    public static function updateCategory(array $item): void
 	{
-        /* @var $db SpoonDatabase */
         $db = BackendModel::getContainer()->get('database');
 
-        $item['edited_on'] = BackendModel::getUTCDate();
-
-        // build extra
-        $extra = array(
-            'id' => $item['extra_id'],
-            'module' => 'NavigationBlock',
-            'type' => 'widget',
-            'label' => 'NavigationBlock',
-            'action' => 'Detail',
-            'data' => serialize(
-                array(
-                    'id' => $item['id'],
-                    'extra_label' => $item['alias'],
-                )
-            ),
-            'hidden' => 'N');
+        // update the category
+        $db->update('navigation_block_categories', $item, 'id = ?', [(int) $item['id']]);
 
         // update extra
-        $db->update('modules_extras', $extra, 'id = ? AND module = ? AND type = ? AND action = ?', array($extra['id'], $extra['module'], $extra['type'], $extra['action']));
-
-        $affectedRows = $db->update('navigation_block_categories', $item, 'id = ?', array($item['id']));
-
-        return $affectedRows;
+        BackendModel::updateExtra(
+            $item['extra_id'],
+            'data',
+            [
+                'id' => $item['id'],
+                'extra_label' => $item['title'],
+                'language' => $item['language'],
+                'edit_url' => BackendModel::createUrlForAction('EditCategory') . '&id=' . $item['id'],
+            ]
+        );
     }
 
-    /**
-     * @return array
-     */
-    public static function getRecursionLevelsForDropDown()
+    public static function getRecursionLevelsForDropDown(): array
     {
         $options = array(
             0 => ucfirst(BL::getLabel('none')),
@@ -346,18 +366,6 @@ class Model
             -1 => ucfirst(BL::getLabel('infinite')),
         );
 
-
         return $options;
-    }
-
-    public static function getAliasTemplatePath($alias)
-    {
-        $theme = BackendModel::get('fork.settings')->get('Core', 'theme', 'core');
-
-        if ($theme) {
-            $templateFile =  '/src/Frontend/Themes/' . $theme . '/Modules/NavigationBlock/Layout/Widgets/' . SpoonFilter::toCamelCase($alias) . '.tpl';
-            return $templateFile;
-        }
-        return null;
     }
 }

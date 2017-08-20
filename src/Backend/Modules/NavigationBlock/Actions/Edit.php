@@ -9,109 +9,93 @@ namespace Backend\Modules\NavigationBlock\Actions;
  * file that was distributed with this source code.
  */
 
+use Backend\Core\Engine\Base\ActionEdit as BackendBaseActionEdit;
+use Backend\Core\Engine\Authentication as BackendAuthentication;
+use Backend\Core\Engine\Form as BackendForm;
+use Backend\Core\Engine\Meta as BackendMeta;
+use Backend\Core\Language\Language as BL;
+use Backend\Core\Engine\Model as BackendModel;
+use Backend\Form\Type\DeleteType;
+use Backend\Modules\Pages\Engine\Model as BackendPagesModel;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
+
 /**
  * This is the edit-action, it will display a form with the item data to edit
  *
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-
-use Backend\Core\Engine\Base\ActionEdit as BackendBaseActionEdit;
-use Backend\Core\Engine\Form as BackendForm;
-use Backend\Core\Engine\Language as BL;
-use Backend\Core\Engine\Model as BackendModel;
-use Backend\Modules\Pages\Engine\Model as BackendPagesModel;
-
-use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
-
 class Edit extends BackendBaseActionEdit
 {
-	/**
-	 * Execute the action
-	 */
-	public function execute()
+	public function execute(): void
 	{
-		parent::execute();
+        $this->id = $this->getRequest()->query->getInt('id');
 
-		$this->loadData();
-		$this->loadForm();
-		$this->validateForm();
+        // does the item exist?
+        if ($this->id !== 0 && BackendNavigationBlockModel::exists($this->id)) {
+            parent::execute();
 
-		$this->parse();
-		$this->display();
+            $this->getData();
+            $this->loadForm();
+            $this->validateForm();
+            $this->loadDeleteForm();
+
+            $this->parse();
+            $this->display();
+        } else {
+            $this->redirect(BackendModel::createUrlForAction('Index') . '&error=non-existing');
+        }
 	}
 
-	/**
-	 * Load the item data
-	 */
-	protected function loadData()
+	protected function getData(): void
 	{
-		$this->id = $this->getParameter('id', 'int', null);
-		if($this->id == null || !BackendNavigationBlockModel::exists($this->id))
-		{
-			$this->redirect(
-				BackendModel::createURLForAction('index') . '&error=non-existing'
-			);
-		}
-
-		$this->record = BackendNavigationBlockModel::get($this->id);
+	   $this->record = BackendNavigationBlockModel::get($this->id);
 	}
 
-	/**
-	 * Load the form
-	 */
-	protected function loadForm()
+	protected function loadForm(): void
 	{
+        $categories = BackendNavigationBlockModel::getCategories();
+
 		// create form
-		$this->frm = new BackendForm('edit');
+		$this->form = new BackendForm('edit');
 
-        $this->frm->addDropdown('page_id', BackendPagesModel::getPagesForDropdown(), $this->record['page_id']);
-        $this->frm->addTextarea('description', $this->record['description']);
-        $this->frm->addDropdown('recursion_level', BackendNavigationBlockModel::getRecursionLevelsForDropdown(), $this->record['recursion_level']);
-
-        $this->frm->addText('class', $this->record['class']);
-
-		// get categories
-		$categories = BackendNavigationBlockModel::getCategories();
-		$this->frm->addDropdown('category_id', $categories, $this->record['category_id']);
+        $this->form->addDropdown('page_id', BackendPagesModel::getPagesForDropdown(), $this->record['page_id']);
+        $this->form->addTextarea('description', $this->record['description']);
+        $this->form->addDropdown('recursion_level', BackendNavigationBlockModel::getRecursionLevelsForDropdown(), $this->record['recursion_level']);
+        $this->form->addText('class', $this->record['class']);
+		$this->form->addDropdown('category_id', $categories, $this->record['category_id']);
 	}
 
-	/**
-	 * Parse the page
-	 */
-	protected function parse()
+	protected function parse(): void
 	{
 		parent::parse();
-		$this->tpl->assign('item', $this->record);
+		$this->template->assign('item', $this->record);
 	}
 
-	/**
-	 * Validate the form
-	 */
-	protected function validateForm()
+	protected function validateForm(): void
 	{
-		if($this->frm->isSubmitted())
+		if($this->form->isSubmitted())
 		{
-			$this->frm->cleanupFields();
+			$this->form->cleanupFields();
 
 			// validation
-			$fields = $this->frm->getFields();
+			$fields = $this->form->getFields();
 
             $fields['page_id']->isFilled(BL::err('FieldIsRequired'));
             $fields['recursion_level']->isFilled(BL::err('FieldIsRequired'));
 			$fields['category_id']->isFilled(BL::err('FieldIsRequired'));
 
-			if($this->frm->isCorrect())
+			if($this->form->isCorrect())
 			{
+                $item = [];
 				$item['id'] = $this->id;
 				$item['language'] = BL::getWorkingLanguage();
-
                 $item['page_id'] = $fields['page_id']->getValue();
                 $item['recursion_level'] = $fields['recursion_level']->getValue();
                 $item['class'] = $fields['class']->getValue();
                 $item['description'] = $fields['description']->getValue();
-
 				$item['sequence'] = BackendNavigationBlockModel::getMaximumSequence() + 1;
-				$item['category_id'] = $this->frm->getField('category_id')->getValue();
+				$item['category_id'] = $this->form->getField('category_id')->getValue();
 
                 if (isset($item['sequence'])) {
                     unset($item['sequence']);
@@ -120,11 +104,20 @@ class Edit extends BackendBaseActionEdit
                 BackendNavigationBlockModel::update($item);
 				$item['id'] = $this->id;
 
-				BackendModel::triggerEvent($this->getModule(), 'after_edit', $item);
 				$this->redirect(
 					BackendModel::createURLForAction('index') . '&report=edited&highlight=row-' . $item['id']
 				);
 			}
 		}
 	}
+
+    private function loadDeleteForm(): void
+    {
+        $deleteForm = $this->createForm(
+            DeleteType::class,
+            ['id' => $this->record['id']],
+            ['module' => $this->getModule(), 'action' => 'Delete']
+        );
+        $this->template->assign('deleteForm', $deleteForm->createView());
+    }
 }

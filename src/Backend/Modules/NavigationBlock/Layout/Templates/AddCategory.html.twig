@@ -23,12 +23,11 @@
               </label>
               {% form_field_error title %} {% form_field title %}
             </div>
-            <div class="form-group">
+            <div class="form-group last">
               <label for="alias" class="control-label">
-                {{ 'lbl.Alias'|trans|ucfirst }}
+                {{ 'lbl.Template'|trans|ucfirst }}
               </label>
-              {% form_field alias %} {% form_field_error alias %}
-              <span id="generatedUrl"></span>
+              {% form_field template %} {% form_field_error template %}
             </div>
           </div>
         </div>

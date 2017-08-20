@@ -2,48 +2,69 @@
 
 namespace Backend\Modules\NavigationBlock\Actions;
 
-    /*
-     * This file is part of Fork CMS.
-     *
-     * For the full copyright and license information, please view the license
-     * file that was distributed with this source code.
-     */
+/*
+ * This file is part of Fork CMS.
+ *
+ * For the full copyright and license information, please view the license
+ * file that was distributed with this source code.
+ */
+
+use Symfony\Component\Filesystem\Filesystem;
+use Backend\Core\Engine\Base\ActionDelete as BackendBaseActionDelete;
+use Backend\Core\Engine\Model as BackendModel;
+use Backend\Form\Type\DeleteType;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
 
 /**
  * This is the delete-action, it deletes an item
  *
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-
-use Backend\Core\Engine\Base\ActionDelete as BackendBaseActionDelete;
-use Backend\Core\Engine\Model as BackendModel;
-
-use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
-
 class Delete extends BackendBaseActionDelete
 {
-    /**
-     * Execute the action
-     */
-    public function execute()
+    public function execute(): void
     {
-        $this->id = $this->getParameter('id', 'int');
+        $deleteForm = $this->createForm(
+            DeleteType::class,
+            null,
+            ['module' => $this->getModule(), 'action' => 'Delete']
+        );
+        $deleteForm->handleRequest($this->getRequest());
+        if (!$deleteForm->isSubmitted() || !$deleteForm->isValid()) {
+            $this->redirect(BackendModel::createUrlForAction(
+                'Index',
+                null,
+                null,
+                ['error' => 'something-went-wrong']
+            ));
+
+            return;
+        }
+        $deleteFormData = $deleteForm->getData();
+
+        $this->id = $deleteFormData['id'];
 
         // does the item exist
-        if ($this->id !== null && BackendNavigationBlockModel::exists($this->id)) {
-            parent::execute();
-            $this->record = (array)BackendNavigationBlockModel::get($this->id);
+        if ($this->id === 0 || !BackendNavigationBlockModel::exists($this->id)) {
+            $this->redirect(BackendModel::createUrlForAction('Index', null, null, ['error' => 'non-existing']));
 
-            BackendNavigationBlockModel::delete($this->id);
-
-            BackendModel::triggerEvent($this->getModule(), 'after_delete', array('id' => $this->id));
-
-            $this->redirect(
-                BackendModel::createURLForAction('index') . '&report=deleted&var=' .
-                urlencode($this->record['title'])
-            );
-        } else {
-            $this->redirect(BackendModel::createURLForAction('index') . '&error=non-existing');
+            return;
         }
+
+        $this->record = (array) BackendNavigationBlockModel::get($this->id);
+
+        parent::execute();
+
+        // delete the record
+        BackendNavigationBlockModel::delete($this->id);
+
+        // redirect
+        $this->redirect(BackendModel::createUrlForAction(
+            'Index',
+            null,
+            null,
+            ['report' => 'deleted', 'var' => $this->record['id']]
+        ));
     }
 }

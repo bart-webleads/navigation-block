@@ -2,67 +2,73 @@
 
 namespace Backend\Modules\NavigationBlock\Installer;
 
-    /*
-     * This file is part of Fork CMS.
-     *
-     * For the full copyright and license information, please view the license
-     * file that was distributed with this source code.
-     */
-
-/**
- * Installer for the Navigation Block module
+/*
+ * This file is part of Fork CMS.
  *
- * @author Bart Lagerweij <bart@webleads.nl>
+ * For the full copyright and license information, please view the license
+ * file that was distributed with this source code.
  */
 
 use Backend\Core\Installer\ModuleInstaller;
+use Common\ModuleExtraType;
 
+/**
+ * Installer for the NavigationBlock module
+ *
+ * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
+ */
 class Installer extends ModuleInstaller
 {
-    public function install()
+    public function install(): void
     {
-        // import the sql
-        $this->importSQL(dirname(__FILE__) . '/Data/install.sql');
-
-        // install the module in the database
         $this->addModule('NavigationBlock');
+        $this->importSQL(__DIR__ . '/Data/install.sql');
+        $this->importLocale(__DIR__ . '/Data/locale.xml');
+        $this->configureBackendNavigation();
+        $this->configureBackendRights();
+        $this->configureFrontendExtras();
+    }
 
-        // install the locale, this is set here beceause we need the module for this
-        $this->importLocale(dirname(__FILE__) . '/Data/locale.xml');
-
-        $this->setModuleRights(1, 'NavigationBlock');
-
-        $this->setActionRights(1, 'NavigationBlock', 'Index');
-        $this->setActionRights(1, 'NavigationBlock', 'Add');
-        $this->setActionRights(1, 'NavigationBlock', 'Edit');
-        $this->setActionRights(1, 'NavigationBlock', 'Delete');
-        $this->setActionRights(1, 'NavigationBlock', 'Sequence');
-        $this->setActionRights(1, 'NavigationBlock', 'Categories');
-        $this->setActionRights(1, 'NavigationBlock', 'AddCategory');
-        $this->setActionRights(1, 'NavigationBlock', 'EditCategory');
-        $this->setActionRights(1, 'NavigationBlock', 'DeleteCategory');
-        $this->setActionRights(1, 'NavigationBlock', 'SequenceCategories');
-
-        // add extra's
-        $subnameID = $this->insertExtra('NavigationBlock', 'block', 'NavigationBlock', null, null, 'N', 1000);
-        $this->insertExtra('NavigationBlock', 'block', 'NavigationBlockDetail', 'Detail', null, 'N', 1001);
-
+    private function configureBackendNavigation(): void
+    {
+        // set navigation
         $navigationModulesId = $this->setNavigation(null, 'Modules');
-        $navigationNavigationBlockId = $this->setNavigation($navigationModulesId, 'NavigationBlock');
+        $navigationNavigationBlockId = $this->setNavigation($navigationModulesId, $this->getModule());
         $this->setNavigation(
             $navigationNavigationBlockId,
             'Categories',
             'navigation_block/categories',
-            array('navigation_block/add_category', 'navigation_block/edit_category')
+            ['navigation_block/add_category', 'navigation_block/edit_category']
         );
         $this->setNavigation(
             $navigationNavigationBlockId,
-            'NavigationBlock',
+            $this->getModule(),
             'navigation_block/index',
-            array(
-                'navigation_block/add',
-                'navigation_block/edit'
-            )
+            ['navigation_block/add','navigation_block/edit']
         );
+
+    }
+
+    private function configureBackendRights(): void
+    {
+        $this->setModuleRights(1, $this->getModule());
+
+        // Configure backend rights for entities
+        $this->setActionRights(1, $this->getModule(), 'Index');
+        $this->setActionRights(1, $this->getModule(), 'Add');
+        $this->setActionRights(1, $this->getModule(), 'Edit');
+        $this->setActionRights(1, $this->getModule(), 'Delete');
+        $this->setActionRights(1, $this->getModule(), 'Sequence');
+        $this->setActionRights(1, $this->getModule(), 'Categories');
+        $this->setActionRights(1, $this->getModule(), 'AddCategory');
+        $this->setActionRights(1, $this->getModule(), 'EditCategory');
+        $this->setActionRights(1, $this->getModule(), 'DeleteCategory');
+        $this->setActionRights(1, $this->getModule(), 'SequenceCategories');
+
+    }
+
+    private function configureFrontendExtras(): void
+    {
     }
 }
