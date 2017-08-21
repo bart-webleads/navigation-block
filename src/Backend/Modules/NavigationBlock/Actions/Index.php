@@ -9,29 +9,27 @@ namespace Backend\Modules\NavigationBlock\Actions;
  * file that was distributed with this source code.
  */
 
+use Backend\Core\Engine\Base\ActionIndex as BackendBaseActionIndex;
+use Backend\Core\Engine\Authentication as BackendAuthentication;
+use Backend\Core\Engine\DataGridArray as BackendDataGridArray;
+use Backend\Core\Engine\DataGridDatabase as BackendDataGridDatabase;
+use Backend\Core\Engine\DataGridFunctions as BackendDataGridFunctions;
+use Backend\Core\Language\Language as BL;
+use Backend\Core\Engine\Model as BackendModel;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
+
 /**
  * This is the index-action (default), it will display the overview of Navigation Block posts
  *
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-
-use Backend\Core\Engine\Base\ActionIndex as BackendBaseActionIndex;
-use Backend\Core\Engine\Language as BL;
-use Backend\Core\Engine\Model as BackendModel;
-use Backend\Core\Engine\Authentication as BackendAuthentication;
-use Backend\Core\Engine\DataGridDB as BackendDataGridDB;
-use Backend\Core\Engine\DataGridFunctions as BackendDataGridFunctions;
-
-use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
 
 class Index extends BackendBaseActionIndex
 {
     private $categoryCount;
 
-    /**
-	 * Execute the action
-	 */
-	public function execute()
+	public function execute(): void
 	{
 		parent::execute();
 		$this->loadDataGrid();
@@ -40,21 +38,20 @@ class Index extends BackendBaseActionIndex
 		$this->display();
 	}
 
-	/**
-	 * Load the dataGrid
-	 */
-	private function loadDataGrid()
+	private function loadDataGrid(): void
 	{
-		$this->dataGrid = new BackendDataGridDB(
-			BackendNavigationBlockModel::QRY_DATAGRID_BROWSE,
-            array('active', BL::getWorkingLanguage())
+		$this->dataGrid = new BackendDataGridDatabase(
+			BackendNavigationBlockModel::QUERY_DATAGRID_BROWSE,
+            ['active', BL::getWorkingLanguage()]
 		);
 
         // reform date
-		$this->dataGrid->setColumnFunction(
-			array(new BackendDataGridFunctions(), 'getLongDate'),
-			array('[created_on]'), 'created_on', true
-		);
+        $this->dataGrid->setColumnFunction(
+            [new BackendDataGridFunctions(), 'getLongDate'],
+            ['[created_on]'],
+            'created_on',
+            true
+        );
 
 		// drag and drop sequencing
 		$this->dataGrid->enableSequenceByDragAndDrop();
@@ -77,13 +74,10 @@ class Index extends BackendBaseActionIndex
         $this->categoryCount = BackendNavigationBlockModel::getCategoryCount();
 	}
 
-	/**
-	 * Parse the page
-	 */
-	protected function parse()
+	protected function parse(): void
 	{
-		// parse the dataGrid if there are results
-		$this->tpl->assign('dataGrid', (string) $this->dataGrid->getContent());
-		$this->tpl->assign('hasCategories', (bool) $this->categoryCount);
+		// parse datagrids
+		$this->template->assign('dataGrid', (string) $this->dataGrid->getContent());
+		$this->template->assign('hasCategories', (bool) $this->categoryCount);
 	}
 }

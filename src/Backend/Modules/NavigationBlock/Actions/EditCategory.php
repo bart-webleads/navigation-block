@@ -9,132 +9,115 @@ namespace Backend\Modules\NavigationBlock\Actions;
  * file that was distributed with this source code.
  */
 
+use Backend\Core\Engine\Base\ActionEdit as BackendBaseActionEdit;
+use Backend\Core\Engine\Authentication as BackendAuthentication;
+use Backend\Core\Engine\Form as BackendForm;
+use Backend\Core\Engine\Meta as BackendMeta;
+use Backend\Core\Language\Language as BL;
+use Backend\Core\Engine\Model as BackendModel;
+use Backend\Form\Type\DeleteType;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
+
 /**
  * This is the edit category action, it will display a form to edit an existing category.
  *
- * @property mixed record
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <wouter@webflow.be>
  */
-
-use Backend\Core\Engine\Base\ActionEdit as BackendBaseActionEdit;
-use Backend\Core\Engine\Form as BackendForm;
-use Backend\Core\Engine\Language as BL;
-use Backend\Core\Engine\Model as BackendModel;
-
-use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
-
 class EditCategory extends BackendBaseActionEdit
 {
-    /**
-     * Execute the action
-     */
-    public function execute()
+    public function execute(): void
     {
-        parent::execute();
+        $this->id = $this->getRequest()->query->getInt('id');
 
-        $this->getData();
-        $this->loadForm();
-        $this->validateForm();
+        // does the item exists?
+        if ($this->id !== null && BackendNavigationBlockModel::existsCategory($this->id)) {
+            parent::execute();
 
-        $this->parse();
-        $this->display();
+            $this->getData();
+            $this->loadForm();
+            $this->validateForm();
+            $this->loadDeleteForm();
+
+            $this->parse();
+            $this->display();
+        } else {
+            $this->redirect(BackendModel::createURLForAction('Categories') . '&error=non-existing');
+        }
     }
 
-    /**
-     * Get the data
-     */
-    private function getData()
+    private function getData(): void
     {
-        $this->id = $this->getParameter('id', 'int');
-        if ($this->id == null || !BackendNavigationBlockModel::existsCategory($this->id)) {
-            $this->redirect(
-                BackendModel::createURLForAction('categories') . '&error=non-existing'
-            );
-        }
-
         $this->record = BackendNavigationBlockModel::getCategory($this->id);
     }
 
-    /**
-     * Load the form
-     */
-    private function loadForm()
+
+    private function loadForm(): void
     {
-        $this->frm = new BackendForm('editCategory');
-        $this->frm->addText('title', $this->record['title']);
-        $this->frm->addText('alias', $this->record['alias']);
+        $templates = BackendNavigationBlockModel::getTemplates();
+
+        // create form
+        $this->form = new BackendForm('edit_category');
+
+        $this->form->addText('title', $this->record['title']);
+        $this->form->addDropdown('template', $templates, $this->record['template']);
     }
 
-    /**
-     * Parse the form
-     */
-    protected function parse()
+
+    protected function parse(): void
     {
         parent::parse();
 
-        $this->tpl->assign('item', $this->record);
+        $this->template->assign('item', $this->record);
     }
 
     /**
      * Validate the form
+     *
+     * @return  void
      */
-    private function validateForm()
+    private function validateForm(): void
     {
-        if ($this->frm->isSubmitted()) {
-            $this->frm->cleanupFields();
-            $this->validateFields();
+        // is the form submitted?
+        if ($this->form->isSubmitted()) {
+            // cleanup the submitted fields, ignore fields that were added by hackers
+            $this->form->cleanupFields();
 
-            if ($this->frm->isCorrect()) {
+            $fields = $this->form->getFields();
+
+            // validate fields
+            $fields['title']->isFilled(BL::err('TitleIsRequired'));
+            $fields['template']->isFilled(BL::err('FieldIsRequired'));
+
+            if ($this->form->isCorrect()) {
                 // build item
+                $item = [];
                 $item['id'] = $this->id;
                 $item['language'] = $this->record['language'];
-                $item['title'] = $this->frm->getField('title')->getValue();
-                $item['alias'] = $this->frm->getField('alias')->getValue();
+                $item['title'] = $fields['title']->getValue();
+                $item['template'] = $fields['template']->getValue();
+                $item['created_on'] = BackendModel::getUTCDate();
                 $item['extra_id'] = $this->record['extra_id'];
 
-                $item = $this->saveData($item);
-                $this->redirectToOverview($item);
+                // update the item
+                BackendNavigationBlockModel::updateCategory($item);
+
+                // everything is saved, so redirect to the overview
+                $this->redirect(
+                    BackendModel::createURLForAction('Categories') . '&report=edited-category&var=' .
+                    rawurlencode($item['title']) . '&highlight=' . $item['id']
+                );
             }
         }
     }
 
-    /**
-     * @param $item
-     * @return mixed
-     */
-    private function saveData($item)
+    private function loadDeleteForm(): void
     {
-        if (isset($item['sequence'])) {
-            unset($item['sequence']);
-        }
-        BackendNavigationBlockModel::updateCategory($item);
-        BackendModel::triggerEvent($this->getModule(), 'after_edit_category', array('item' => $item));
-        return $item;
-    }
-
-    /**
-     * @param $item
-     */
-    private function redirectToOverview($item)
-    {
-        $this->redirect(
-            BackendModel::createURLForAction('categories') . '&report=edited-category&var=' .
-            urlencode($item['title']) . '&highlight=row-' . $item['id']
+        $deleteForm = $this->createForm(
+            DeleteType::class,
+            ['id' => $this->record['id']],
+            ['module' => $this->getModule(), 'action' => 'DeleteCategory']
         );
-    }
-
-    /**
-     *
-     */
-    private function validateFields()
-    {
-        $this->frm->getField('title')->isFilled(BL::err('TitleIsRequired'));
-        if ($this->frm->getField('alias')->isFilled(BL::err('IsRequired'))) {
-            $aliasValue = $this->frm->getField('alias')->getValue();
-            $this->frm->getField('alias')->isValidAgainstRegexp('/^[-_a-z0-9]+$/', BL::err('AliasInvalid'));
-            if (ctype_digit($aliasValue)) {
-                $this->frm->getField('alias')->addError(BL::err('AliasCannotBeNumeric'));
-            }
-        }
+        $this->template->assign('deleteForm', $deleteForm->createView());
     }
 }

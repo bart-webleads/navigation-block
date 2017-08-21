@@ -1,0 +1,28 @@
+{% if widgetNavigationBlockDetail.items %}
+<section class="module-navigation-block widget-navigation-block-list">
+  {% if widgetNavigationBlockDetail.category.title %}
+    {% block widget_heading %}
+    <div class="widget-header">
+        <header class="widget-heading" role="banner">
+          <h3>{{ widgetNavigationBlockDetail.category.title }}</h3>
+        </header>
+    </div>
+    {% endblock %}
+  {% endif %}
+
+  {% block widget_body %}
+    <ul>
+      {% for item in widgetNavigationBlockDetail.items %}
+      <li class="{% if item.class %}{{ item.class }}{% endif %}{% if item.selected %} selected{% endif %}">
+        <a title="{% if not item.description %}{{ item.title }}{% endif %}{% if item.description %} {{ item.description }}{% endif %}" href="{{ item.full_url }}">
+          {{ item.title }}
+        </a>
+        {% if item.childrenHtml %}
+          {{ item.childrenHtml|raw }}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% endblock %}
+</section>
+{% endif %}

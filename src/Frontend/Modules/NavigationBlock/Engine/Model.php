@@ -2,27 +2,34 @@
 
 namespace Frontend\Modules\NavigationBlock\Engine;
 
-/**
- * NavigationBlock Model
+/*
+ * This file is part of Fork CMS.
  *
- * @author Bart Lagerweij <bart@webleads.nl>
- * @copyright Copyright 2014 by Webleads http://www.webleads.nl
+ * For the full copyright and license information, please view the license
+ * file that was distributed with this source code.
  */
 
 use Frontend\Core\Engine\Model as FrontendModel;
 use Frontend\Core\Engine\Navigation as FrontendNavigation;
 use SpoonDatabase;
 
+/**
+ * NavigationBlock Model
+ *
+ * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
+ * @copyright Copyright 2014 by Webleads http://www.webleads.nl
+ */
 class Model
 {
     /**
      * @param $categoryId
      * @return array
      */
-    public static function getPagesByCategoryId($categoryId)
+    public static function getPagesByCategoryId(int $categoryId): array
     {
-        /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
+
         $items = (array) $database->getRecords(
             'SELECT nb.page_id, nb.class, nb.description, nb.recursion_level
              FROM navigation_block AS nb
@@ -41,36 +48,10 @@ class Model
     }
 
     /**
-     * @param $alias
-     * @return array
-     */
-    public static function getPagesByCategoryAlias($alias)
-    {
-        /** @var $database SpoonDatabase */
-        $database = FrontendModel::getContainer()->get('database');
-        $items = (array) $database->getRecords(
-            'SELECT nb.page_id, nb.class, nb.description, nb.recursion_level
-             FROM navigation_block AS nb
-             INNER JOIN navigation_block_categories AS nbc ON nbc.id = nb.category_id
-             INNER JOIN pages AS p ON (p.id=nb.page_id AND p.language = nb.language AND p.status = ?)
-             WHERE nbc.alias = ? AND nb.language = ?
-             ORDER BY nb.sequence ASC, nb.id DESC',
-            array('active', $alias, FRONTEND_LANGUAGE));
-
-        if (empty($items)) {
-            return array();
-        }
-
-        $result = self::getSubPagesAndInfo($items);
-
-        return $result;
-    }
-
-    /**
      * @param $items
      * @return array
      */
-    private static function getSubPagesAndInfo($items)
+    private static function getSubPagesAndInfo(array $items): array
     {
         $result = array();
         foreach ($items as $item) {
@@ -85,7 +66,7 @@ class Model
             if ($item['recursion_level'] !== 0) {
                 $depth = $item['recursion_level'] == -1 ? null : $item['recursion_level'];
                 if (($depth || $depth == null) && FrontendNavigation::getFirstChildId($item['page_id'])) {
-                    $childrenHtml = (string) FrontendNavigation::getNavigationHtml('page', $item['page_id'], $depth, array(), '/Modules/NavigationBlock/Layout/Templates/Navigation.tpl');
+                    $childrenHtml = (string) FrontendNavigation::getNavigationHTML('page', $item['page_id'], $depth, array(), '/Modules/NavigationBlock/Layout/Templates/Navigation.html.twig');
                     $item['childrenHtml'] = $childrenHtml;
                 }
             }
@@ -98,10 +79,10 @@ class Model
      * @param $categoryId
      * @return array
      */
-    public static function getCategory($categoryId)
+    public static function getCategory(int $categoryId): array
     {
-        /** @var $database SpoonDatabase */
         $database = FrontendModel::getContainer()->get('database');
+
         $category = (array) $database->getRecord(
             'SELECT nbc.*
              FROM navigation_block_categories AS nbc
@@ -112,32 +93,6 @@ class Model
             return array();
         }
 
-        $category['url'] = $category['alias'];
-
         return $category;
     }
-
-    /**
-     * @param $alias
-     * @return array
-     */
-    public static function getCategoryAlias($alias)
-    {
-        /** @var $database SpoonDatabase */
-        $database = FrontendModel::getContainer()->get('database');
-        $category = (array) $database->getRecord(
-            'SELECT nbc.*
-             FROM navigation_block_categories AS nbc
-             WHERE nbc.alias = ? AND nbc.language = ?',
-            array($alias, FRONTEND_LANGUAGE));
-
-        if (empty($category)) {
-            return array();
-        }
-
-        $category['url'] = $category['alias'];
-
-        return $category;
-    }
-
 }

@@ -1,0 +1,66 @@
+{% extends '/Layout/Templates/base.html.twig' %}
+
+{% block actionbar %}
+
+{% endblock %}
+
+{% block content %}
+  {% form add %}
+  <div class="row fork-module-content">
+    <div class="col-md-8">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <p>{{ 'lbl.MainContent'|trans|capitalize }}</p>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="page" class="control-label">
+              {{ 'lbl.Page'|trans|capitalize }}
+            </label>
+            {% form_field_error page_id %} {% form_field page_id %}
+          </div>
+          <div class="form-group">
+            <label for="class" class="control-label">
+              {{ 'lbl.Class'|trans|ucfirst }}
+            </label>
+            {% form_field class %}{% form_field_error class %}
+          </div>
+          <div class="form-group">
+            <label for="class" class="control-label">
+              {{ 'lbl.RecursionLevel'|trans|ucfirst }}
+            </label>
+            {% form_field recursion_level %}{% form_field_error recursion_level %}
+          </div>
+          <div class="form-group">
+            <label for="description" class="control-label">
+              {{ 'lbl.Description'|trans|ucfirst }}
+            </label>
+            {% form_field description %}{% form_field_error description %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <p>{{ 'lbl.Category'|trans|capitalize }}</p>
+        </div>
+        <div class="panel-body">
+          {% form_field category_id %}{% form_field_error category_id %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row fork-module-actions">
+    <div class="col-md-12">
+      <div class="btn-toolbar">
+        <div class="btn-group pull-right" role="group">
+          <button id="addButton" type="submit" name="add" class="btn btn-primary">
+            <span class="fa fa-plus-square"></span>{{ 'lbl.Add'|trans|capitalize }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endform %}
+{% endblock %}

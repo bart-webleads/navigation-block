@@ -1,0 +1,31 @@
+{% extends '/Layout/Templates/base.html.twig' %}
+{% import "Layout/Templates/macros.html.twig" as macro %}
+
+{% block actionbar %}
+  <div class="btn-toolbar pull-right">
+    <div class="btn-group" role="group">
+      {% if hasCategories %}
+        {{ macro.buttonIcon( geturl('add'), 'plus-square', 'lbl.Add'|trans|capitalize) }}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+
+  {% if dataGrid %}
+    <div class="table-responsive">
+      {{ dataGrid|raw }}
+    </div>
+  {% endif %}
+
+  {% if not hasCategories %}
+  <h3>{{ 'msg.NeedToCreateCategorieFirst'|trans|ucfirst }}</h3>
+  <p>{{ 'msg.NoCategories'|trans|ucfirst }}</p>
+  {% endif %}
+
+  {% if not dataGrid %}
+  {{ 'msg.NoItems'|trans|ucfirst }}
+  {% endif %}
+
+{% endblock %}

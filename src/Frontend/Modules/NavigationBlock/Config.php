@@ -2,10 +2,11 @@
 
 namespace Frontend\Modules\NavigationBlock;
 
-/**
- * This is the configuration-object for the Navigation Block module
+/*
+ * This file is part of Fork CMS.
  *
- * @author Bart Lagerweij <bart@webleads.nl>
+ * For the full copyright and license information, please view the license
+ * file that was distributed with this source code.
  */
 
 use Frontend\Core\Engine\Base\Config as FrontendBaseConfig;
@@ -13,21 +14,22 @@ use Frontend\Core\Engine\Base\Config as FrontendBaseConfig;
 /**
  * This is the configuration-object
  *
- * @author Tijs Verkoyen <tijs@sumocoders.be>
+ * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-class Config extends FrontendBaseConfig
+final class Config extends FrontendBaseConfig
 {
     /**
      * The default action
      *
-     * @var	string
+     * @var string
      */
-    protected $defaultAction = 'Detail';
+    protected $defaultAction = 'Index';
 
     /**
      * The disabled actions
      *
-     * @var	array
+     * @var array
      */
     protected $disabledActions = array();
 }

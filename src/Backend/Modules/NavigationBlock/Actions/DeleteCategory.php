@@ -9,45 +9,70 @@ namespace Backend\Modules\NavigationBlock\Actions;
  * file that was distributed with this source code.
  */
 
+use Backend\Core\Engine\Base\ActionDelete as BackendBaseActionDelete;
+use Backend\Core\Engine\Model as BackendModel;
+use Backend\Form\Type\DeleteType;
+use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
+
 /**
  * This action will delete a category
  *
  * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
  */
-
-use Backend\Core\Engine\Base\ActionDelete as BackendBaseActionDelete;
-use Backend\Core\Engine\Model as BackendModel;
-
-use Backend\Modules\NavigationBlock\Engine\Model as BackendNavigationBlockModel;
-
 class DeleteCategory extends BackendBaseActionDelete
 {
-	/**
-	 * Execute the action
-	 */
-	public function execute()
-	{
-		$this->id = $this->getParameter('id', 'int');
+    public function execute(): void
+    {
+        $deleteForm = $this->createForm(
+            DeleteType::class,
+            null,
+            ['module' => $this->getModule(), 'action' => 'DeleteCategory']
+        );
+        $deleteForm->handleRequest($this->getRequest());
+        if (!$deleteForm->isSubmitted() || !$deleteForm->isValid()) {
+            $this->redirect(BackendModel::createUrlForAction(
+                'Categories',
+                null,
+                null,
+                ['error' => 'something-went-wrong']
+            ));
 
-		// does the item exist
-		if($this->id == null || !BackendNavigationBlockModel::existsCategory($this->id))
-		{
-			$this->redirect(
-				BackendModel::createURLForAction('categories') . '&error=non-existing'
-			);
-		}
+            return;
+        }
+        $deleteFormData = $deleteForm->getData();
 
-		// fetch the category
-		$this->record = (array) BackendNavigationBlockModel::getCategory($this->id);
+        $this->id = $deleteFormData['id'];
 
-		// delete item
-		BackendNavigationBlockModel::deleteCategory($this->id);
-		BackendModel::triggerEvent($this->getModule(), 'after_delete_category', array('item' => $this->record));
+        // does the item exist
+        if ($this->id === 0 || !BackendNavigationBlockModel::existsCategory($this->id)) {
+            $this->redirect(BackendModel::createUrlForAction('Categories', null, null, ['error' => 'non-existing']));
 
-		// category was deleted, so redirect
-		$this->redirect(
-			BackendModel::createURLForAction('categories') . '&report=deleted-category&var=' .
-			urlencode($this->record['title'])
-		);
+            return;
+        }
+
+        $this->record = (array) BackendNavigationBlockModel::getCategory($this->id);
+
+        if (!BackendNavigationBlockModel::deleteCategoryAllowed($this->id)) {
+            $this->redirect(BackendModel::createUrlForAction(
+                'Categories',
+                null,
+                null,
+                ['error' => 'delete-category-not-allowed', 'var' => $this->record['title']]
+            ));
+
+            return;
+        }
+
+        parent::execute();
+
+        BackendNavigationBlockModel::deleteCategory($this->id);
+
+        $this->redirect(BackendModel::createUrlForAction(
+            'Categories',
+            null,
+            null,
+            ['report' => 'deleted-category', 'var' => $this->record['title']]
+        ));
 	}
 }

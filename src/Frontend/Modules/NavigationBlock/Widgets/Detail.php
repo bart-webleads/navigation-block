@@ -2,53 +2,63 @@
 
 namespace Frontend\Modules\NavigationBlock\Widgets;
 
-/**
- * NavigationBlock Widget
+/*
+ * This file is part of Fork CMS.
  *
- * @author Bart Lagerweij <bart@webleads.nl>
- * @copyright Copyright 2014 by Webleads http://www.webleads.nl
+ * For the full copyright and license information, please view the license
+ * file that was distributed with this source code.
  */
 
+use Frontend\Core\Engine\Theme as FrontendTheme;
 use Frontend\Core\Engine\Base\Widget as FrontendBaseWidget;
 use Frontend\Modules\NavigationBlock\Engine\Model as FrontendNavigationBlockModel;
 use Frontend\Core\Engine\Model as FrontendModel;
 use SpoonFilter;
 
 /**
- * Class Detail
- * @package Frontend\Modules\NavigationBlock\Widget
+ * NavigationBlock Widget
+ *
+ * @author Bart Lagerweij <bart@webleads.nl>
+ * @author Wouter Verstuyf <info@webflow.be>
+ * @copyright Copyright 2014 by Webleads http://www.webleads.nl
  */
 class Detail extends FrontendBaseWidget
 {
-    /**
-     * Execute the extra
-     */
-    public function execute()
+    public function execute(): void
     {
         parent::execute();
 
-        $templateFile = null;
-        $categoryAlias = !empty($this->data['extra_label']) ? SpoonFilter::toCamelCase($this->data['extra_label']) : (!empty($this->data['id']) ?  SpoonFilter::toCamelCase($this->data['id']) : null);
-        if ($categoryAlias) {
-            $templateFile = $this->getMyTemplate($categoryAlias);
-        }
-        $this->loadTemplate($templateFile);
+        $this->getData();
+        $template = $this->assignTemplate();
+        $this->loadTemplate($template);
         $this->parse();
     }
 
-    /**
-     * Parse
-     */
-    private function parse()
+    private function assignTemplate(): string
     {
-        $idOrAlias = isset($this->data['id']) ? $this->data['id'] : null;
-        if (is_numeric($idOrAlias)) {
-            $items = FrontendNavigationBlockModel::getPagesByCategoryId($idOrAlias);
-            $category = FrontendNavigationBlockModel::getCategory($idOrAlias);
-        } else {
-            $items = FrontendNavigationBlockModel::getPagesByCategoryAlias($idOrAlias);
-            $category = FrontendNavigationBlockModel::getCategoryAlias($idOrAlias);
+        $template = FrontendTheme::getPath(FRONTEND_MODULES_PATH . '/NavigationBlock/Layout/Widgets/Default.html.twig');
+
+        if (!empty($this->category) && !empty($this->category['template'])) {
+            try {
+                $template = FrontendTheme::getPath(
+                    FRONTEND_MODULES_PATH . '/NavigationBlock/Layout/Widgets/' . $this->category['template']
+                );
+            } catch (FrontendException $e) {
+                // do nothing
+            }
         }
+
+        return $template;
+    }
+
+    private function getData(): void
+    {
+        $this->category = FrontendNavigationBlockModel::getCategory($this->data['id']);
+    }
+
+    private function parse(): void
+    {
+        $items = FrontendNavigationBlockModel::getPagesByCategoryId($this->data['id']);
 
         if (!empty($items)) {
             $pageId = $this->getContainer()->get('page')->getId();
@@ -57,32 +67,13 @@ class Detail extends FrontendBaseWidget
                     $item['selected'] = true;
                 }
             }
-            $this->tpl->assign(
+            $this->template->assign(
                 'widgetNavigationBlockDetail',
                 array(
                     'items' => $items,
-                    'category' => $category,
+                    'category' => $this->category,
                 )
             );
         }
-    }
-
-    /**
-     * @param $categoryAlias
-     * @return null|string
-     */
-    private function getMyTemplate($categoryAlias)
-    {
-        $currentTheme = $this->get('fork.settings')->get(
-            'Core',
-            'theme'
-        );
-        if ($currentTheme) {
-            $templateFile = FRONTEND_PATH . '/Themes/' . $currentTheme . '/Modules/NavigationBlock/Layout/Widgets/' . $categoryAlias . '.tpl';
-            if (is_file($templateFile)) {
-                return $templateFile;
-            }
-        }
-        return null;
     }
 }
